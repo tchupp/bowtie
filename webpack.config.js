@@ -10,12 +10,28 @@ module.exports = {
             {
                 test: /\.elm$/,
                 exclude: [/elm-stuff/, /node_modules/],
-                // This is what you need in your own work
-                // loader: "elm-webpack-loader",
                 loader: 'elm-webpack-loader',
                 options: {
                     debug: true
                 }
+            },
+            {
+                test: /\.less$/,
+                use: [{
+                    loader: 'style-loader'
+                }, {
+                    loader: 'css-loader'
+                }, {
+                    loader: 'less-loader'
+                }]
+            },
+            {
+                test: /\.svg$/,
+                loader: 'svg-inline-loader'
+            },
+            {
+                test: /\.(eot|svg|ttf|woff|woff2)$/,
+                loader: 'file-loader?name=public/fonts/[name].[ext]'
             }
         ]
     },

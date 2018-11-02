@@ -131,12 +131,6 @@ mainContent model =
             Home ->
                 pageHome ()
 
-            GettingStarted ->
-                pageGettingStarted ()
-
-            Modules ->
-                pageModules ()
-
             NotFound ->
                 pageNotFound
 
@@ -147,8 +141,6 @@ mainContent model =
 
 type Route
     = Home
-    | GettingStarted
-    | Modules
     | NotFound
 
 
@@ -167,6 +159,4 @@ routeParser : Parser (Route -> a) a
 routeParser =
     UrlParser.oneOf
         [ UrlParser.map Home top
-        , UrlParser.map GettingStarted (s "getting-started")
-        , UrlParser.map Modules (s "modules")
         ]
