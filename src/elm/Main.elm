@@ -8,18 +8,15 @@ import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Page.GettingStarted exposing (pageGettingStarted)
-import Page.Home exposing (pageHome)
-import Page.Modules exposing (pageModules)
-import Page.NotFound exposing (pageNotFound)
+import Page.Home
+import Page.NotFound
 import Url exposing (Url)
-import Url.Parser as UrlParser exposing ((</>), Parser, s, top)
+import Url.Parser as UrlParser exposing ((</>), Parser, s, string, top)
 
 
 type alias Model =
     { navKey : Navigation.Key
     , route : Route
-    , navState : Navbar.State
     }
 
 
@@ -30,8 +27,8 @@ main =
         , view = view
         , update = update
         , subscriptions = subscriptions
-        , onUrlRequest = ClickedLink
-        , onUrlChange = UrlChange
+        , onUrlRequest = LinkClicked
+        , onUrlChange = UrlChanged
         }
 
 
@@ -42,13 +39,10 @@ main =
 init : () -> Url -> Navigation.Key -> ( Model, Cmd Msg )
 init _ url key =
     let
-        ( navState, navCmd ) =
-            Navbar.initialState NavMsg
-
         ( model, urlCmd ) =
-            urlUpdate url { navKey = key, navState = navState, route = Home }
+            urlUpdate url { navKey = key, route = Home }
     in
-    ( model, Cmd.batch [ urlCmd, navCmd ] )
+    ( model, Cmd.batch [ urlCmd ] )
 
 
 
@@ -57,7 +51,7 @@ init _ url key =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Navbar.subscriptions model.navState NavMsg
+    Sub.none
 
 
 
@@ -65,15 +59,14 @@ subscriptions model =
 
 
 type Msg
-    = UrlChange Url
-    | ClickedLink UrlRequest
-    | NavMsg Navbar.State
+    = UrlChanged Url
+    | LinkClicked UrlRequest
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ClickedLink req ->
+        LinkClicked req ->
             case req of
                 Browser.Internal url ->
                     ( model, Navigation.pushUrl model.navKey <| Url.toString url )
@@ -81,22 +74,13 @@ update msg model =
                 Browser.External href ->
                     ( model, Navigation.load href )
 
-        UrlChange url ->
+        UrlChanged url ->
             urlUpdate url model
-
-        NavMsg state ->
-            ( { model | navState = state }
-            , Cmd.none
-            )
 
 
 urlUpdate : Url -> Model -> ( Model, Cmd Msg )
 urlUpdate url model =
-    let
-        route =
-            decode url
-    in
-    ( { model | route = route }, Cmd.none )
+    ( { model | route = decode url }, Cmd.none )
 
 
 
@@ -107,32 +91,20 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "Bowtie"
     , body =
-        [ div []
-            [ menu NavMsg <| model.navState
-            , mainContent model
-            ]
-        ]
+        [ mainContent model ]
     }
-
-
-menu : (Navbar.State -> msg) -> Navbar.State -> Html msg
-menu toMsg state =
-    Navbar.config toMsg
-        |> Navbar.withAnimation
-        |> Navbar.container
-        |> Navbar.brand [ href "#" ] [ text "Bowtie" ]
-        |> Navbar.view state
 
 
 mainContent : Model -> Html Msg
 mainContent model =
-    Grid.container [] <|
-        case model.route of
-            Home ->
-                pageHome ()
+    case model.route of
+        Home ->
+            Page.Home.view ()
 
-            NotFound ->
-                pageNotFound
+        --        Closet _ ->
+        --            Page.Home.view ()
+        NotFound ->
+            Page.NotFound.pageNotFound ()
 
 
 
@@ -141,6 +113,7 @@ mainContent model =
 
 type Route
     = Home
+      --    | Closet String
     | NotFound
 
 
@@ -150,7 +123,7 @@ decode url =
         path =
             Maybe.withDefault "" url.fragment
     in
-    { url | path = path, fragment = Nothing }
+    { url | path = url.path, fragment = Nothing }
         |> UrlParser.parse routeParser
         |> Maybe.withDefault NotFound
 
@@ -159,4 +132,6 @@ routeParser : Parser (Route -> a) a
 routeParser =
     UrlParser.oneOf
         [ UrlParser.map Home top
+
+        --        , UrlParser.map Closet (s "closet" </> string)
         ]

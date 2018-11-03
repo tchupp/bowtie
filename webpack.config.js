@@ -26,18 +26,14 @@ module.exports = {
                 }]
             },
             {
-                test: /\.svg$/,
-                loader: 'svg-inline-loader'
-            },
-            {
                 test: /\.(eot|svg|ttf|woff|woff2)$/,
-                loader: 'file-loader?name=public/fonts/[name].[ext]'
+                loader: 'file-loader'
             }
         ]
     },
     devServer: {
         inline: true,
-        contentBase: './src',
+        contentBase: './src/static',
         stats: 'errors-only'
     }
 };
