@@ -1,17 +1,15 @@
 module Main exposing (main)
 
-import Bootstrap.Grid as Grid
-import Bootstrap.Grid.Col as Col
-import Bootstrap.Modal as Modal
-import Bootstrap.Navbar as Navbar
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Page.Home
+import Page.Login
 import Page.NotFound
+import TopBar
 import Url exposing (Url)
-import Url.Parser as UrlParser exposing ((</>), Parser, s, string, top)
+import Url.Parser as UrlParser exposing ((</>), Parser, fragment, s, string, top)
 
 
 type alias Model =
@@ -41,6 +39,9 @@ init _ url key =
     let
         ( model, urlCmd ) =
             urlUpdate url { navKey = key, route = Home }
+
+        ( topBarModel, topBarCmd ) =
+            TopBar.init
     in
     ( model, Cmd.batch [ urlCmd ] )
 
@@ -101,8 +102,12 @@ mainContent model =
         Home ->
             Page.Home.view ()
 
-        --        Closet _ ->
-        --            Page.Home.view ()
+        Login ->
+            Page.Login.view ()
+
+        Closet _ ->
+            Page.Home.view ()
+
         NotFound ->
             Page.NotFound.pageNotFound ()
 
@@ -113,7 +118,8 @@ mainContent model =
 
 type Route
     = Home
-      --    | Closet String
+    | Closet String
+    | Login
     | NotFound
 
 
@@ -132,6 +138,6 @@ routeParser : Parser (Route -> a) a
 routeParser =
     UrlParser.oneOf
         [ UrlParser.map Home top
-
-        --        , UrlParser.map Closet (s "closet" </> string)
+        , UrlParser.map Login (s "login" </> top)
+        , UrlParser.map Closet (s "closet" </> string)
         ]
