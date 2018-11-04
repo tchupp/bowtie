@@ -1,0 +1,95 @@
+@import (reference) "_vars.less";
+
+.login-container {
+  margin: 50px auto;
+  width: 330px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.theme-btn {
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+
+  font-family: 'Inconsolata', monospace;
+  font-weight: normal;
+  font-size: 16px;
+}
+
+.theme-btn-provider, .theme-btn-primary {
+  width: 230px;
+  height: 38px;
+  border: 1px solid #196ac8;
+  box-shadow: none;
+  border-radius: 0;
+  background-color: @base00;
+  font-size: 14px;
+  color: @base05;
+}
+
+.theme-btn-primary {
+  margin: 20px 0;
+}
+
+.theme-btn-primary:hover {
+  background-color: #196ac8;
+  color: white;
+}
+
+.theme-btn:focus {
+  outline: none;
+}
+
+.theme-btn:active {
+  outline: none;
+}
+
+.login-form {
+  box-sizing: border-box;
+}
+
+.login-panel {
+  background-color: @base00;
+  padding: 30px;
+  border: 1px solid #484747;
+  box-sizing: border-box;
+}
+
+.login-form-row {
+  display: block;
+  margin: 0 auto 15px;
+  box-sizing: border-box;
+}
+
+.login-form-input {
+  border: 1px solid #6d6d6d;
+  display: block;
+  width: 230px;
+  height: 38px;
+  margin: 0 auto;
+  padding: 6px 12px;
+  background-color: @base00;
+  box-sizing: border-box;
+
+  font-family: 'Inconsolata', monospace;
+  font-weight: normal;
+  font-size: 16px;
+  color: @base05;
+}
+
+.login-form-input:focus,
+.login-form-input:active {
+  border-color: white;
+  outline: none;
+}
+
+.login-form-label {
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  width: 230px;
+  margin: 0 auto 5px;
+  position: relative;
+  text-align: left;
+  padding: 5px;
+}
