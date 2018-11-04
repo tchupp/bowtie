@@ -3,7 +3,6 @@ node_js: node
 
 cache:
   directories:
-#    - elm-stuff
     - node_modules
 
 notifications:
@@ -19,6 +18,6 @@ deploy:
   skip-cleanup: true
   keep-history: true
   target-branch: gh-pages
-  local-dir: dist
+  local-dir: ./dist
   on:
     branch: master
