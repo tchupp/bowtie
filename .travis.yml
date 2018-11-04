@@ -3,8 +3,22 @@ node_js: node
 
 cache:
   directories:
-    - elm-stuff
+#    - elm-stuff
     - node_modules
+
+notifications:
+  email:
+    on_success: never
 
 script:
   - yarn run build
+
+deploy:
+  provider: pages
+  github-token: $GITHUB_TOKEN
+  skip-cleanup: true
+  keep-history: true
+  target-branch: gh-pages
+  local-dir: dist
+  on:
+    branch: master
