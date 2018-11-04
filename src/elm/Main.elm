@@ -4,6 +4,7 @@ import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Page.Closet
 import Page.Home
 import Page.Login
 import Page.NotFound
@@ -16,18 +17,6 @@ type alias Model =
     { navKey : Navigation.Key
     , route : Route
     }
-
-
-main : Program () Model Msg
-main =
-    Browser.application
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        , onUrlRequest = LinkClicked
-        , onUrlChange = UrlChanged
-        }
 
 
 
@@ -43,7 +32,7 @@ init _ url key =
         ( topBarModel, topBarCmd ) =
             TopBar.init
     in
-    ( model, Cmd.batch [ urlCmd ] )
+    ( model, Cmd.batch [ urlCmd, topBarCmd ] )
 
 
 
@@ -106,7 +95,7 @@ mainContent model =
             Page.Login.view ()
 
         Closet _ ->
-            Page.Home.view ()
+            Page.Closet.view ()
 
         NotFound ->
             Page.NotFound.pageNotFound ()
@@ -141,3 +130,19 @@ routeParser =
         , UrlParser.map Login (s "login" </> top)
         , UrlParser.map Closet (s "closet" </> string)
         ]
+
+
+
+-- MAIN
+
+
+main : Program () Model Msg
+main =
+    Browser.application
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        , onUrlRequest = LinkClicked
+        , onUrlChange = UrlChanged
+        }
