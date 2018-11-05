@@ -13,6 +13,6 @@ pageNotFound _ =
             [ Html.text "Not to worry, you can head"
             , Html.br [] []
             , Html.text "back to the "
-            , Html.a [ href "/" ] [ Html.text "home page" ]
+            , Html.a [ href "#" ] [ Html.text "home page" ]
             ]
         ]

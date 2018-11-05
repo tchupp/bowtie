@@ -67,7 +67,7 @@ decode url =
         path =
             Maybe.withDefault "" url.fragment
     in
-    { url | path = url.path, fragment = Nothing }
+    { url | path = path, fragment = Nothing }
         |> UrlParser.parse routeParser
         |> Maybe.withDefault NotFound
 
