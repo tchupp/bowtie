@@ -15,7 +15,9 @@ import Url.Parser as UrlParser exposing ((</>), Parser, fragment, s, string, top
 
 
 type alias Model =
-    { routerModel : Router.Model }
+    { routerModel : Router.Model
+    , topBarModel : TopBar.Model
+    }
 
 
 
@@ -32,7 +34,7 @@ init _ url key =
             TopBar.init
 
         model =
-            { routerModel = routerModel }
+            { routerModel = routerModel, topBarModel = topBarModel }
     in
     ( model
     , Cmd.batch
@@ -57,6 +59,7 @@ subscriptions model =
 
 type Msg
     = RouterMsg Router.Msg
+    | TopBarMsg TopBar.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -69,6 +72,13 @@ update msg model =
             in
             ( { model | routerModel = routerModel }, Cmd.map RouterMsg routerCmd )
 
+        TopBarMsg submsg ->
+            let
+                ( topBarModel, topBarCmd ) =
+                    TopBar.update submsg model.topBarModel
+            in
+            ( { model | topBarModel = topBarModel }, Cmd.map TopBarMsg topBarCmd )
+
 
 
 -- VIEW
@@ -78,7 +88,17 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "Bowtie"
     , body =
-        [ mainContent model ]
+        [ div [ class "content-frame" ]
+            [ div [ id "top-bar-app" ]
+                [ Html.map TopBarMsg <| TopBar.view model.topBarModel ]
+            , div [ class "bottom" ]
+                [ div [ id "content" ]
+                    [ div [ id "subpage" ]
+                        [ mainContent model ]
+                    ]
+                ]
+            ]
+        ]
     }
 
 

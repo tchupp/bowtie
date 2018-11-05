@@ -1,7 +1,7 @@
 module Page.Login exposing (view)
 
 import Html exposing (Html)
-import Html.Attributes exposing (..)
+import Html.Attributes exposing (class, type_)
 
 
 view : () -> Html msg
