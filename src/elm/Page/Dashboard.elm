@@ -1,4 +1,4 @@
-module Page.Home exposing (Model, Msg, init, update, view)
+module Page.Dashboard exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)

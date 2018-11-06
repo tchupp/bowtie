@@ -5,7 +5,7 @@ import Browser.Navigation as Navigation
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Page.Closet
-import Page.Home
+import Page.Dashboard
 import Page.Login
 import Page.NotFound
 import Router
@@ -23,7 +23,7 @@ type alias Model =
 
 
 type PageModel
-    = HomeModel Page.Home.Model
+    = DashboardModel Page.Dashboard.Model
     | LoginModel ()
     | NotFoundModel ()
     | ClosetModel ()
@@ -68,15 +68,15 @@ init _ url navKey =
 initPageModel : () -> Router.Route -> ( PageModel, Cmd Msg )
 initPageModel _ route =
     case route of
-        Router.Home ->
+        Router.Dashboard ->
             let
                 ( model, cmd ) =
-                    Page.Home.init
+                    Page.Dashboard.init
 
-                homeCmd =
-                    Cmd.map HomeMsg cmd
+                dashboardCmd =
+                    Cmd.map DashboardMsg cmd
             in
-            ( HomeModel model, Cmd.map PageMsg homeCmd )
+            ( DashboardModel model, Cmd.map PageMsg dashboardCmd )
 
         Router.Login ->
             ( LoginModel (), Cmd.none )
@@ -109,7 +109,7 @@ type Msg
 
 
 type PageMsg
-    = HomeMsg Page.Home.Msg
+    = DashboardMsg Page.Dashboard.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -148,12 +148,12 @@ updateRoute route model =
 updatePage : PageMsg -> Model -> ( Model, Cmd Msg )
 updatePage msg model =
     case ( msg, model.pageModel ) of
-        ( HomeMsg homeMsg, HomeModel homeModel ) ->
+        ( DashboardMsg dashboardMsg, DashboardModel dashboardModel ) ->
             let
                 ( m1, m2 ) =
-                    Page.Home.update homeMsg homeModel
+                    Page.Dashboard.update dashboardMsg dashboardModel
             in
-            ( { model | pageModel = HomeModel m1 }, Cmd.map PageMsg <| Cmd.map HomeMsg m2 )
+            ( { model | pageModel = DashboardModel m1 }, Cmd.map PageMsg <| Cmd.map DashboardMsg m2 )
 
         _ ->
             ( model, Cmd.none )
@@ -184,8 +184,8 @@ view model =
 mainContent : Model -> Html Msg
 mainContent model =
     case model.pageModel of
-        HomeModel homeModel ->
-            Html.map PageMsg <| Html.map HomeMsg <| Page.Home.view homeModel
+        DashboardModel dashboardModel ->
+            Html.map PageMsg <| Html.map DashboardMsg <| Page.Dashboard.view dashboardModel
 
         LoginModel loginModel ->
             Page.Login.view loginModel

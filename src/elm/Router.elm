@@ -45,7 +45,7 @@ update msg model =
 
 
 type Route
-    = Home
+    = Dashboard
     | Closet String
     | Login
     | NotFound
@@ -70,7 +70,7 @@ replaceFragment url =
 routeParser : Parser (Route -> a) a
 routeParser =
     UrlParser.oneOf
-        [ UrlParser.map Home top
+        [ UrlParser.map Dashboard top
         , UrlParser.map Login (s "login" </> top)
         , UrlParser.map Closet (s "closet" </> string)
         ]
