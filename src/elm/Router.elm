@@ -1,4 +1,4 @@
-module Router exposing (Model, Msg(..), Route(..), init, update)
+module Router exposing (Model, Msg(..), Route(..), init, parseRoute, update)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
@@ -8,7 +8,6 @@ import Url.Parser as UrlParser exposing ((</>), Parser, fragment, s, string, top
 
 type alias Model =
     { navKey : Navigation.Key
-    , route : Route
     }
 
 
@@ -18,7 +17,7 @@ type alias Model =
 
 init : () -> Url -> Navigation.Key -> ( Model, Cmd Msg )
 init _ url key =
-    urlUpdate url { navKey = key, route = Home }
+    ( { navKey = key }, Cmd.none )
 
 
 
@@ -26,8 +25,7 @@ init _ url key =
 
 
 type Msg
-    = UrlChanged Url
-    | LinkClicked UrlRequest
+    = LinkClicked UrlRequest
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -41,14 +39,6 @@ update msg model =
                 Browser.External href ->
                     ( model, Navigation.load href )
 
-        UrlChanged url ->
-            urlUpdate url model
-
-
-urlUpdate : Url -> Model -> ( Model, Cmd Msg )
-urlUpdate url model =
-    ( { model | route = decode url }, Cmd.none )
-
 
 
 -- ROUTES
@@ -61,15 +51,20 @@ type Route
     | NotFound
 
 
-decode : Url -> Route
-decode url =
+parseRoute : Url -> Route
+parseRoute url =
+    replaceFragment url
+        |> UrlParser.parse routeParser
+        |> Maybe.withDefault NotFound
+
+
+replaceFragment : Url -> Url
+replaceFragment url =
     let
         path =
             Maybe.withDefault "" url.fragment
     in
     { url | path = path, fragment = Nothing }
-        |> UrlParser.parse routeParser
-        |> Maybe.withDefault NotFound
 
 
 routeParser : Parser (Route -> a) a

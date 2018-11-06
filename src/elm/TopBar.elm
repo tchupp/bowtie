@@ -6,8 +6,7 @@ import Html.Events exposing (onClick)
 
 
 type UserState
-    = UserLoggingIn
-    | UserLoggedIn
+    = UserLoggedIn
     | UserLoggedOut
 
 
@@ -32,7 +31,6 @@ init =
 
 type Msg
     = ToggleUserMenu
-    | LogIn
     | LogOut
 
 
@@ -41,9 +39,6 @@ update msg model =
     case msg of
         ToggleUserMenu ->
             ( { model | userMenuVisible = not model.userMenuVisible }, Cmd.none )
-
-        LogIn ->
-            ( { model | userState = UserLoggingIn }, Cmd.none )
 
         LogOut ->
             ( { model | userState = UserLoggedOut }, Cmd.none )
@@ -75,9 +70,6 @@ view model =
 viewUserInfo : UserState -> Bool -> Html Msg
 viewUserInfo state userMenuVisible =
     case state of
-        UserLoggingIn ->
-            div [] []
-
         UserLoggedIn ->
             div [ class "user-info" ]
                 [ div
@@ -98,7 +90,7 @@ viewUserInfo state userMenuVisible =
 
         UserLoggedOut ->
             div
-                [ class "user-id", onClick LogIn ]
+                [ class "user-id" ]
                 [ Html.a
                     [ href "#login"
                     , class "login-button"

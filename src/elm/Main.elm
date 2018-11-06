@@ -15,9 +15,18 @@ import Url.Parser as UrlParser exposing ((</>), Parser, fragment, s, string, top
 
 
 type alias Model =
-    { routerModel : Router.Model
+    { route : Router.Route
+    , routerModel : Router.Model
     , topBarModel : TopBar.Model
+    , pageModel : PageModel
     }
+
+
+type PageModel
+    = HomeModel Page.Home.Model
+    | LoginModel ()
+    | NotFoundModel ()
+    | ClosetModel ()
 
 
 
@@ -25,23 +34,58 @@ type alias Model =
 
 
 init : () -> Url -> Navigation.Key -> ( Model, Cmd Msg )
-init _ url key =
+init _ url navKey =
     let
+        route =
+            Router.parseRoute url
+
+        ( pageModel, pageCmd ) =
+            initPageModel () route
+
         ( routerModel, routerCmd ) =
-            Router.init () url key
+            Router.init () url navKey
 
         ( topBarModel, topBarCmd ) =
             TopBar.init
 
         model =
-            { routerModel = routerModel, topBarModel = topBarModel }
+            { route = route
+            , routerModel = routerModel
+            , topBarModel = topBarModel
+            , pageModel = pageModel
+            }
+
+        cmd =
+            Cmd.batch
+                [ Cmd.map RouterMsg routerCmd
+                , topBarCmd
+                , pageCmd
+                ]
     in
-    ( model
-    , Cmd.batch
-        [ Cmd.map RouterMsg routerCmd
-        , topBarCmd
-        ]
-    )
+    ( model, cmd )
+
+
+initPageModel : () -> Router.Route -> ( PageModel, Cmd Msg )
+initPageModel _ route =
+    case route of
+        Router.Home ->
+            let
+                ( model, cmd ) =
+                    Page.Home.init
+
+                homeCmd =
+                    Cmd.map HomeMsg cmd
+            in
+            ( HomeModel model, Cmd.map PageMsg homeCmd )
+
+        Router.Login ->
+            ( LoginModel (), Cmd.none )
+
+        Router.Closet _ ->
+            ( ClosetModel (), Cmd.none )
+
+        Router.NotFound ->
+            ( NotFoundModel (), Cmd.none )
 
 
 
@@ -60,11 +104,23 @@ subscriptions model =
 type Msg
     = RouterMsg Router.Msg
     | TopBarMsg TopBar.Msg
+    | PageMsg PageMsg
+    | RouteChanged Router.Route
+
+
+type PageMsg
+    = HomeMsg Page.Home.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        RouteChanged route ->
+            updateRoute route model
+
+        PageMsg submsg ->
+            updatePage submsg model
+
         RouterMsg submsg ->
             let
                 ( routerModel, routerCmd ) =
@@ -78,6 +134,29 @@ update msg model =
                     TopBar.update submsg model.topBarModel
             in
             ( { model | topBarModel = topBarModel }, Cmd.map TopBarMsg topBarCmd )
+
+
+updateRoute : Router.Route -> Model -> ( Model, Cmd Msg )
+updateRoute route model =
+    let
+        ( pageModel, pageCmd ) =
+            initPageModel () route
+    in
+    ( { model | route = route, pageModel = pageModel }, pageCmd )
+
+
+updatePage : PageMsg -> Model -> ( Model, Cmd Msg )
+updatePage msg model =
+    case ( msg, model.pageModel ) of
+        ( HomeMsg homeMsg, HomeModel homeModel ) ->
+            let
+                ( m1, m2 ) =
+                    Page.Home.update homeMsg homeModel
+            in
+            ( { model | pageModel = HomeModel m1 }, Cmd.map PageMsg <| Cmd.map HomeMsg m2 )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 
@@ -104,18 +183,18 @@ view model =
 
 mainContent : Model -> Html Msg
 mainContent model =
-    case model.routerModel.route of
-        Router.Home ->
-            Page.Home.view ()
+    case model.pageModel of
+        HomeModel homeModel ->
+            Html.map PageMsg <| Html.map HomeMsg <| Page.Home.view homeModel
 
-        Router.Login ->
-            Page.Login.view ()
+        LoginModel loginModel ->
+            Page.Login.view loginModel
 
-        Router.Closet _ ->
-            Page.Closet.view ()
+        ClosetModel closetModel ->
+            Page.Closet.view closetModel
 
-        Router.NotFound ->
-            Page.NotFound.pageNotFound ()
+        NotFoundModel notFoundModel ->
+            Page.NotFound.pageNotFound notFoundModel
 
 
 
@@ -123,15 +202,13 @@ mainContent model =
 
 
 onUrlRequest : UrlRequest -> Msg
-onUrlRequest urlRequest =
-    Router.LinkClicked urlRequest
-        |> RouterMsg
+onUrlRequest =
+    RouterMsg << Router.LinkClicked
 
 
 onUrlChange : Url -> Msg
-onUrlChange url =
-    Router.UrlChanged url
-        |> RouterMsg
+onUrlChange =
+    RouteChanged << Router.parseRoute
 
 
 main : Program () Model Msg
