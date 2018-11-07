@@ -1,4 +1,4 @@
-module Router exposing (Model, Msg(..), Route(..), init, parseRoute, update)
+module Router exposing (Model, Msg(..), Route(..), closetRoute, init, parseRoute, update)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
@@ -74,3 +74,8 @@ routeParser =
         , UrlParser.map Login (s "login" </> top)
         , UrlParser.map Closet (s "closet" </> string)
         ]
+
+
+closetRoute : String -> String
+closetRoute id =
+    "#closet/" ++ id

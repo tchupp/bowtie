@@ -36,14 +36,14 @@ type PageModel
 init : () -> Url -> Navigation.Key -> ( Model, Cmd Msg )
 init _ url navKey =
     let
+        ( routerModel, routerCmd ) =
+            Router.init () url navKey
+
         route =
             Router.parseRoute url
 
         ( pageModel, pageCmd ) =
             initPageModel () route
-
-        ( routerModel, routerCmd ) =
-            Router.init () url navKey
 
         ( topBarModel, topBarCmd ) =
             TopBar.init
@@ -72,11 +72,8 @@ initPageModel _ route =
             let
                 ( model, cmd ) =
                     Page.Dashboard.init
-
-                dashboardCmd =
-                    Cmd.map DashboardMsg cmd
             in
-            ( DashboardModel model, Cmd.map PageMsg dashboardCmd )
+            ( DashboardModel model, dashboardCmd cmd )
 
         Router.Login ->
             ( LoginModel (), Cmd.none )
@@ -112,6 +109,11 @@ type PageMsg
     = DashboardMsg Page.Dashboard.Msg
 
 
+dashboardCmd : Cmd Page.Dashboard.Msg -> Cmd Msg
+dashboardCmd =
+    Cmd.map DashboardMsg >> Cmd.map PageMsg
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -125,15 +127,17 @@ update msg model =
             let
                 ( routerModel, routerCmd ) =
                     Router.update submsg model.routerModel
+                        |> Tuple.mapSecond (Cmd.map RouterMsg)
             in
-            ( { model | routerModel = routerModel }, Cmd.map RouterMsg routerCmd )
+            ( { model | routerModel = routerModel }, routerCmd )
 
         TopBarMsg submsg ->
             let
                 ( topBarModel, topBarCmd ) =
                     TopBar.update submsg model.topBarModel
+                        |> Tuple.mapSecond (Cmd.map TopBarMsg)
             in
-            ( { model | topBarModel = topBarModel }, Cmd.map TopBarMsg topBarCmd )
+            ( { model | topBarModel = topBarModel }, topBarCmd )
 
 
 updateRoute : Router.Route -> Model -> ( Model, Cmd Msg )
@@ -150,10 +154,11 @@ updatePage msg model =
     case ( msg, model.pageModel ) of
         ( DashboardMsg dashboardMsg, DashboardModel dashboardModel ) ->
             let
-                ( m1, m2 ) =
+                ( newModel, cmd ) =
                     Page.Dashboard.update dashboardMsg dashboardModel
+                        |> Tuple.mapFirst DashboardModel
             in
-            ( { model | pageModel = DashboardModel m1 }, Cmd.map PageMsg <| Cmd.map DashboardMsg m2 )
+            ( { model | pageModel = newModel }, dashboardCmd cmd )
 
         _ ->
             ( model, Cmd.none )
