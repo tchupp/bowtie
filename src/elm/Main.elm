@@ -26,7 +26,7 @@ type PageModel
     = DashboardModel Page.Dashboard.Model
     | LoginModel ()
     | NotFoundModel ()
-    | ClosetModel ()
+    | ClosetModel Page.Closet.Model
 
 
 
@@ -78,8 +78,12 @@ initPageModel _ route =
         Router.Login ->
             ( LoginModel (), Cmd.none )
 
-        Router.Closet _ ->
-            ( ClosetModel (), Cmd.none )
+        Router.Closet ->
+            let
+                ( model, cmd ) =
+                    Page.Closet.init
+            in
+            ( ClosetModel model, closetCmd cmd )
 
         Router.NotFound ->
             ( NotFoundModel (), Cmd.none )
@@ -107,11 +111,17 @@ type Msg
 
 type PageMsg
     = DashboardMsg Page.Dashboard.Msg
+    | ClosetMsg Page.Closet.Msg
 
 
 dashboardCmd : Cmd Page.Dashboard.Msg -> Cmd Msg
 dashboardCmd =
     Cmd.map DashboardMsg >> Cmd.map PageMsg
+
+
+closetCmd : Cmd Page.Closet.Msg -> Cmd Msg
+closetCmd =
+    Cmd.map ClosetMsg >> Cmd.map PageMsg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -160,6 +170,14 @@ updatePage msg model =
             in
             ( { model | pageModel = newModel }, dashboardCmd cmd )
 
+        ( ClosetMsg closetMsg, ClosetModel closetModel ) ->
+            let
+                ( newModel, cmd ) =
+                    Page.Closet.update closetMsg closetModel
+                        |> Tuple.mapFirst ClosetModel
+            in
+            ( { model | pageModel = newModel }, closetCmd cmd )
+
         _ ->
             ( model, Cmd.none )
 
@@ -196,7 +214,7 @@ mainContent model =
             Page.Login.view loginModel
 
         ClosetModel closetModel ->
-            Page.Closet.view closetModel
+            Html.map PageMsg <| Html.map ClosetMsg <| Page.Closet.view closetModel
 
         NotFoundModel notFoundModel ->
             Page.NotFound.pageNotFound notFoundModel

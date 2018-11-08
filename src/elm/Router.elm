@@ -46,7 +46,7 @@ update msg model =
 
 type Route
     = Dashboard
-    | Closet String
+    | Closet
     | Login
     | NotFound
 
@@ -72,7 +72,7 @@ routeParser =
     UrlParser.oneOf
         [ UrlParser.map Dashboard top
         , UrlParser.map Login (s "login" </> top)
-        , UrlParser.map Closet (s "closet" </> string)
+        , UrlParser.map Closet (s "closet" </> top)
         ]
 
 
