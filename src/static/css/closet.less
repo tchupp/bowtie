@@ -30,7 +30,7 @@
     line-height: 60px;
   }
 
-  .closet-family, .closet-item {
+  .closet-family {
     display: flex;
     height: 60px;
     max-height: 60px;
@@ -40,10 +40,6 @@
     position: relative;
 
     &.selected {
-      .closet-item-content {
-        background-color: @amber-secondary;
-      }
-
       .closet-item-banner {
         background-color: @amber-secondary;
       }
@@ -54,6 +50,88 @@
 
       .closet-item-banner {
         background-color: @amber-secondary;
+      }
+    }
+  }
+
+  .closet-item {
+    display: flex;
+    height: 60px;
+    max-height: 60px;
+    margin: 0 60px 4px 0;
+    break-inside: avoid;
+    min-width: 200px;
+    position: relative;
+
+    &.available {
+      .closet-item-content {
+        background-color: @base01;
+      }
+
+      .closet-item-banner {
+        background-color: @blue-primary;
+      }
+
+      &:hover {
+        cursor: pointer;
+
+        .closet-item-banner {
+          background-color: @amber-secondary;
+        }
+      }
+    }
+
+    &.required {
+      .closet-item-content {
+        background-color: @base01;
+      }
+
+      .closet-item-banner {
+        background-color: @green-secondary;
+      }
+
+      &:hover {
+        cursor: pointer;
+
+        .closet-item-banner {
+          background-color: @amber-secondary;
+        }
+      }
+    }
+
+    &.selected {
+      .closet-item-content {
+        background-color: @amber-secondary;
+      }
+
+      .closet-item-banner {
+        background-color: @amber-secondary;
+      }
+
+      &:hover {
+        cursor: pointer;
+
+        .closet-item-banner {
+          background-color: @red-secondary;
+        }
+      }
+    }
+
+    &.excluded {
+      .closet-item-content {
+        background-color: @base01;
+
+        .closet-item-name {
+          color: @base04;
+        }
+      }
+
+      .closet-item-banner {
+        background-color: @base01;
+      }
+
+      &:hover {
+        cursor: default;
       }
     }
   }
@@ -84,14 +162,6 @@
     flex-direction: column;
     background: @base01;
     position: relative;
-
-    &.no-set {
-      width: calc(100% - 10px);
-
-      .closet-item-name {
-        color: @base04;
-      }
-    }
 
     .closet-item-name {
       letter-spacing: 1px;
