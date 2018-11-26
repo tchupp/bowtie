@@ -58,7 +58,7 @@ view model =
         ]
         [ div
             [ class "topbar-logo" ]
-            [ Html.a [ class "logo-image-link", href "#" ] [] ]
+            [ Html.a [ class "logo-image-link", href "#/" ] [] ]
         , Html.ul [ class "groups" ] []
         , div [ class "topbar-login" ]
             [ div [ class "topbar-user-info" ]
@@ -92,7 +92,7 @@ viewUserInfo state userMenuVisible =
             div
                 [ class "user-id" ]
                 [ Html.a
-                    [ href "#login"
+                    [ href "#/login"
                     , class "login-button"
                     ]
                     [ text "login" ]
