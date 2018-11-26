@@ -78,7 +78,7 @@ viewCloset closet =
         [ div [ class "dashboard-pipeline-banner" ]
             []
         , div [ class "dashboard-pipeline-content" ]
-            [ a [ href <| Router.closetRoute closet.name ]
+            [ a [ href <| "#/closet/" ++ closet.name ]
                 [ div [ class "dashboard-pipeline-name" ]
                     [ text closet.name ]
                 ]

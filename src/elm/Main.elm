@@ -78,10 +78,10 @@ initPageModel _ route =
         Router.Login ->
             ( LoginModel (), Cmd.none )
 
-        Router.Closet id ->
+        Router.Closet id family selections ->
             let
                 ( model, cmd ) =
-                    Page.Closet.init id
+                    Page.Closet.init id family selections
             in
             ( ClosetModel model, closetCmd cmd )
 

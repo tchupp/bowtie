@@ -1,12 +1,13 @@
 module Page.Closet exposing (Model, Msg, init, update, view)
 
 import Dict exposing (Dict)
-import Html exposing (Html, div, h1, text)
-import Html.Attributes exposing (class, classList, disabled)
+import Html exposing (Html, a, div, h1, text)
+import Html.Attributes exposing (class, classList, href)
 import Html.Events exposing (onClick)
 import Http
-import Json.Decode exposing (Decoder, decodeString, dict, field, int, keyValuePairs, list, map3, oneOf, string)
+import Json.Decode exposing (Decoder, dict, field, list, oneOf, string)
 import RemoteData exposing (WebData)
+import Router exposing (buildClosetRoute)
 import TopBar
 import Url.Builder as Url
 
@@ -14,13 +15,14 @@ import Url.Builder as Url
 type alias Model =
     { closetId : String
     , closet : WebData Closet
-    , selectedFamily : Maybe Family
+    , selectedFamilyId : Maybe String
     , selections : List ItemId
     }
 
 
 type alias Closet =
-    { families : List Family
+    { id : String
+    , families : List Family
     }
 
 
@@ -55,17 +57,19 @@ selectedItems families =
 -- INIT
 
 
-init : String -> ( Model, Cmd Msg )
-init closetId =
+init : String -> Maybe String -> List ItemId -> ( Model, Cmd Msg )
+init closetId selectedFamilyId selections =
     let
         model =
             { closetId = closetId
-            , closet = RemoteData.Loading
-            , selectedFamily = Nothing
-            , selections = []
+            , closet = RemoteData.NotAsked
+            , selectedFamilyId = selectedFamilyId
+            , selections = selections
             }
     in
-    ( model, fetchCloset model.closetId model.selections )
+    ( closetUpdated RemoteData.NotAsked selections selectedFamilyId model
+    , fetchCloset model.closetId model.selections
+    )
 
 
 
@@ -84,54 +88,41 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ClosetUpdated closet ->
-            let
-                families =
-                    RemoteData.toMaybe closet
-                        |> Maybe.map .families
-
-                selections =
-                    families
-                        |> Maybe.map selectedItems
-                        |> Maybe.map (List.map .id)
-                        |> Maybe.withDefault model.selections
-
-                selectedFamilyId =
-                    model.selectedFamily
-                        |> Maybe.map .id
-                        |> Maybe.withDefault ""
-
-                selectedFamily =
-                    families
-                        |> Maybe.withDefault []
-                        |> List.filter (\f -> f.id == selectedFamilyId)
-                        |> List.head
-            in
-            ( { model | closet = closet, selections = selections, selectedFamily = selectedFamily }, Cmd.none )
+            ( closetUpdated closet model.selections model.selectedFamilyId model, Cmd.none )
 
         FamilySelected familyId ->
-            let
-                selectedFamily =
-                    RemoteData.toMaybe model.closet
-                        |> Maybe.map .families
-                        |> Maybe.withDefault []
-                        |> List.filter (\f -> f.id == familyId)
-                        |> List.head
-            in
-            ( { model | selectedFamily = selectedFamily }, Cmd.none )
+            ( { model | selectedFamilyId = Just familyId }, Cmd.none )
 
-        ItemSelected itemId ->
-            ( model, fetchCloset model.closetId <| itemId :: model.selections )
+        ItemSelected id ->
+            ( model, Cmd.none )
 
-        ItemDeselected itemId ->
-            let
-                selections =
-                    model.selections
-                        |> List.filter ((/=) itemId)
-            in
-            ( model, fetchCloset model.closetId <| selections )
+        ItemDeselected id ->
+            ( model, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
+
+
+closetUpdated : WebData Closet -> List ItemId -> Maybe String -> Model -> Model
+closetUpdated closet prevSelections selectedFamilyId model =
+    let
+        families =
+            RemoteData.toMaybe closet
+                |> Maybe.map .families
+
+        selections =
+            families
+                |> Maybe.map selectedItems
+                |> Maybe.map (List.map .id)
+                |> Maybe.withDefault prevSelections
+
+        selectedFamily =
+            families
+                |> Maybe.withDefault []
+                |> List.filter (\f -> Just f.id == selectedFamilyId)
+                |> List.head
+    in
+    { model | closet = closet, selections = selections, selectedFamilyId = selectedFamilyId }
 
 
 
@@ -151,16 +142,58 @@ view model =
             h1 [] [ text "LOADING..." ]
 
         RemoteData.Success closet ->
-            viewCloset closet model.selectedFamily
+            viewCloset closet model.selectedFamilyId
 
 
-viewCloset : Closet -> Maybe Family -> Html Msg
-viewCloset closet selectedFamily =
+viewCloset : Closet -> Maybe String -> Html Msg
+viewCloset closet selectedFamilyId =
+    let
+        selections =
+            selectedItems closet.families
+                |> List.map .id
+
+        itemRoute : Item -> String
+        itemRoute item =
+            let
+                apply : List ItemId -> List ItemId
+                apply items =
+                    case item.state of
+                        "selected" ->
+                            List.filter (\i -> item.id /= i) items
+
+                        "available" ->
+                            List.append [ item.id ] items
+
+                        "required" ->
+                            List.append [ item.id ] items
+
+                        _ ->
+                            items
+            in
+            buildClosetRoute closet.id selectedFamilyId (selections |> apply)
+
+        familyRoute : Family -> String
+        familyRoute family =
+            buildClosetRoute closet.id (Just family.id) selections
+
+        itemView : Item -> Html Msg
+        itemView =
+            viewItem <| itemRoute
+
+        familyView : Maybe String -> Family -> Html Msg
+        familyView =
+            viewFamily <| familyRoute
+
+        selectedFamily =
+            closet.families
+                |> List.filter (\f -> Just f.id == selectedFamilyId)
+                |> List.head
+    in
     div [ class "closet" ]
         [ div [ class "closet-content" ]
-            [ viewFamilyPanel closet.families selectedFamily
-            , viewItemPanel selectedFamily
-            , viewOutfitPanel closet.families
+            [ viewFamilyPanel (familyView <| selectedFamilyId) closet.families
+            , viewItemPanel itemView selectedFamily
+            , viewOutfitPanel itemView closet.families
             ]
         ]
 
@@ -169,34 +202,30 @@ viewCloset closet selectedFamily =
 -- VIEW :: Family Panel
 
 
-viewFamilyPanel : List Family -> Maybe Family -> Html Msg
-viewFamilyPanel families selectedFamily =
-    let
-        selectedFamilyId =
-            selectedFamily
-                |> Maybe.map .id
-                |> Maybe.withDefault ""
-    in
+viewFamilyPanel : (Family -> Html Msg) -> List Family -> Html Msg
+viewFamilyPanel familyView families =
     div [ class "closet-items-panel" ]
         (div [ class "closet-panel-name" ] [ text "Families" ]
-            :: (List.map (viewFamily selectedFamilyId) <| families)
+            :: (List.map familyView <| families)
         )
 
 
-viewFamily : String -> Family -> Html Msg
-viewFamily selectedFamilyId family =
-    div
-        [ onClick (FamilySelected family.id)
-        , classList
-            [ ( "closet-family", True )
-            , ( "selected", family.id == selectedFamilyId )
+viewFamily : (Family -> String) -> Maybe String -> Family -> Html Msg
+viewFamily hrefBuilder selectedFamilyId family =
+    a [ href (hrefBuilder family) ]
+        [ div
+            [ onClick (FamilySelected family.id)
+            , classList
+                [ ( "closet-family", True )
+                , ( "selected", Just family.id == selectedFamilyId )
+                ]
             ]
-        ]
-        [ div [ class "closet-item-banner" ]
-            []
-        , div [ class "closet-item-content" ]
-            [ div [ class "closet-item-name" ]
-                [ text family.id ]
+            [ div [ class "closet-item-banner" ]
+                []
+            , div [ class "closet-item-content" ]
+                [ div [ class "closet-item-name" ]
+                    [ text family.id ]
+                ]
             ]
         ]
 
@@ -205,8 +234,8 @@ viewFamily selectedFamilyId family =
 -- VIEW :: Item Panel
 
 
-viewItemPanel : Maybe Family -> Html Msg
-viewItemPanel family =
+viewItemPanel : (Item -> Html Msg) -> Maybe Family -> Html Msg
+viewItemPanel itemView family =
     let
         items =
             Maybe.map .items family
@@ -214,39 +243,22 @@ viewItemPanel family =
     in
     div [ class "closet-items-panel" ] <|
         div [ class "closet-panel-name" ] [ text "Items" ]
-            :: List.map viewItem items
+            :: List.map itemView items
 
 
-viewItem : Item -> Html Msg
-viewItem { id, state } =
-    let
-        action =
-            case state of
-                "selected" ->
-                    ItemDeselected id
-
-                "available" ->
-                    ItemSelected id
-
-                "required" ->
-                    ItemSelected id
-
-                _ ->
-                    NoOp
-
-        attributes =
-            [ onClick <| action
-            , class "closet-item"
-            , class state
+viewItem : (Item -> String) -> Item -> Html Msg
+viewItem hrefBuilder item =
+    a [ href (hrefBuilder item) ]
+        [ div
+            [ class "closet-item"
+            , class item.state
             ]
-    in
-    div
-        attributes
-        [ div [ class "closet-item-banner" ]
-            []
-        , div [ class "closet-item-content" ]
-            [ div [ class "closet-item-name" ]
-                [ text id ]
+            [ div [ class "closet-item-banner" ]
+                []
+            , div [ class "closet-item-content" ]
+                [ div [ class "closet-item-name" ]
+                    [ text item.id ]
+                ]
             ]
         ]
 
@@ -255,11 +267,11 @@ viewItem { id, state } =
 -- VIEW :: Selected Items Panel
 
 
-viewOutfitPanel : List Family -> Html Msg
-viewOutfitPanel families =
+viewOutfitPanel : (Item -> Html Msg) -> List Family -> Html Msg
+viewOutfitPanel itemView families =
     div [ class "closet-items-panel" ] <|
         div [ class "closet-panel-name" ] [ text "Outfit" ]
-            :: (List.map viewItem <| selectedItems families)
+            :: (List.map itemView <| selectedItems families)
 
 
 
@@ -268,7 +280,7 @@ viewOutfitPanel families =
 
 fetchCloset : String -> List ItemId -> Cmd Msg
 fetchCloset closetId selections =
-    closetDecoder
+    closetDecoder closetId
         |> Http.get (retrieveClosetUrl closetId selections)
         |> RemoteData.sendRequest
         |> Cmd.map ClosetUpdated
@@ -286,9 +298,9 @@ retrieveClosetUrl closetId selections =
         [ Url.string "selections" selectionsQuery ]
 
 
-closetDecoder : Decoder Closet
-closetDecoder =
-    Json.Decode.map Closet
+closetDecoder : String -> Decoder Closet
+closetDecoder closetId =
+    Json.Decode.map (Closet closetId)
         (field "options" familiesDecoder)
 
 

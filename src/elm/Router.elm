@@ -1,14 +1,15 @@
-module Router exposing (Model, Msg(..), Route(..), closetRoute, init, parseRoute, update)
+module Router exposing (Model, Msg(..), Route(..), buildClosetRoute, init, parseRoute, update)
 
 import Browser exposing (UrlRequest)
 import Browser.Navigation as Navigation
 import Url exposing (Url)
-import Url.Parser as UrlParser exposing ((</>), Parser, fragment, s, string, top)
+import Url.Builder
+import Url.Parser as UrlParser exposing ((</>), (<?>), Parser, fragment, query, s, string, top)
+import Url.Parser.Query as Query
 
 
 type alias Model =
-    { navKey : Navigation.Key
-    }
+    { navKey : Navigation.Key }
 
 
 
@@ -40,42 +41,103 @@ update msg model =
                     ( model, Navigation.load href )
 
 
+replaceUrl : Model -> Route -> Cmd msg
+replaceUrl model route =
+    Navigation.replaceUrl model.navKey (routeToString route)
+
+
+routeToString : Route -> String
+routeToString route =
+    case route of
+        Dashboard ->
+            Url.Builder.absolute
+                [ "#/" ]
+                []
+
+        Closet id family selections ->
+            Url.Builder.absolute
+                [ "#/closet", id ]
+                [ Url.Builder.string "family" <| Maybe.withDefault "" family
+                , Url.Builder.string "selections" <| String.join "," selections
+                ]
+
+        Login ->
+            Url.Builder.absolute
+                [ "#/login" ]
+                []
+
+        NotFound ->
+            Url.Builder.absolute
+                [ "#/" ]
+                []
+
+
 
 -- ROUTES
 
 
 type Route
     = Dashboard
-    | Closet String
+    | Closet String (Maybe String) (List String)
     | Login
     | NotFound
 
 
 parseRoute : Url -> Route
 parseRoute url =
-    replaceFragment url
+    urlFragmentToPath url
         |> UrlParser.parse routeParser
         |> Maybe.withDefault NotFound
 
 
-replaceFragment : Url -> Url
-replaceFragment url =
-    let
-        path =
-            Maybe.withDefault "" url.fragment
-    in
-    { url | path = path, fragment = Nothing }
+urlFragmentToPath : Url -> Url
+urlFragmentToPath url =
+    { url
+        | path = Maybe.withDefault "" url.fragment
+        , fragment = Nothing
+    }
+        |> Url.toString
+        |> Url.fromString
+        |> Maybe.withDefault url
 
 
 routeParser : Parser (Route -> a) a
 routeParser =
     UrlParser.oneOf
-        [ UrlParser.map Dashboard top
-        , UrlParser.map Login (s "login" </> top)
-        , UrlParser.map Closet (s "closet" </> string)
+        [ UrlParser.map Dashboard <| dashboardRoute
+        , UrlParser.map Login <| loginRoute
+        , UrlParser.map Closet <| closetRoute
         ]
 
 
-closetRoute : String -> String
-closetRoute id =
-    "#closet/" ++ id
+queryList : String -> Query.Parser (List String)
+queryList key =
+    Query.custom key <| identity
+
+
+
+-- ROUTE PARSING
+
+
+dashboardRoute : Parser a a
+dashboardRoute =
+    top
+
+
+loginRoute : Parser a a
+loginRoute =
+    s "login"
+
+
+closetRoute : Parser (String -> Maybe String -> List String -> a) a
+closetRoute =
+    s "closet" </> string <?> Query.string "family" <?> queryList "selections"
+
+
+buildClosetRoute : String -> Maybe String -> List String -> String
+buildClosetRoute id family selections =
+    Url.Builder.absolute
+        [ "#/closet", id ]
+        [ Url.Builder.string "family" <| Maybe.withDefault "" family
+        , Url.Builder.string "selections" <| String.join "," selections
+        ]
