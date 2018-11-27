@@ -154,7 +154,14 @@ updateRoute : Router.Route -> Model -> ( Model, Cmd Msg )
 updateRoute route model =
     let
         ( pageModel, pageCmd ) =
-            initPageModel () route
+            case ( route, model.pageModel ) of
+                ( Router.Closet closetId familyId selections, ClosetModel closetModel ) ->
+                    Page.Closet.reinit closetModel closetId familyId selections
+                        |> Tuple.mapFirst ClosetModel
+                        |> Tuple.mapSecond closetCmd
+
+                _ ->
+                    initPageModel () route
     in
     ( { model | route = route, pageModel = pageModel }, pageCmd )
 

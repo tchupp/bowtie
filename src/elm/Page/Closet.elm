@@ -1,4 +1,4 @@
-module Page.Closet exposing (Model, Msg, init, update, view)
+module Page.Closet exposing (Model, Msg, init, reinit, update, view)
 
 import Dict exposing (Dict)
 import Html exposing (Html, a, div, h1, text)
@@ -14,6 +14,7 @@ import Url.Builder as Url
 
 type alias Model =
     { closetId : String
+    , prevCloset : WebData Closet
     , closet : WebData Closet
     , selectedFamilyId : Maybe String
     , selections : List ItemId
@@ -62,13 +63,27 @@ init closetId selectedFamilyId selections =
     let
         model =
             { closetId = closetId
-            , closet = RemoteData.NotAsked
+            , prevCloset = RemoteData.Loading
+            , closet = RemoteData.Loading
             , selectedFamilyId = selectedFamilyId
             , selections = selections
             }
     in
     ( closetUpdated RemoteData.NotAsked selections selectedFamilyId model
-    , fetchCloset model.closetId model.selections
+    , fetchCloset closetId selections
+    )
+
+
+reinit : Model -> String -> Maybe String -> List ItemId -> ( Model, Cmd Msg )
+reinit model closetId selectedFamilyId selections =
+    ( { model
+        | closetId = closetId
+        , prevCloset = model.closet
+        , closet = RemoteData.Loading
+        , selectedFamilyId = selectedFamilyId
+        , selections = selections
+      }
+    , fetchCloset closetId selections
     )
 
 
