@@ -146,17 +146,17 @@ closetUpdated closet prevSelections selectedFamilyId model =
 
 view : Model -> Html Msg
 view model =
-    case model.closet of
-        RemoteData.NotAsked ->
+    case ( model.prevCloset, model.closet ) of
+        ( _, RemoteData.NotAsked ) ->
             h1 [] [ text "LOADING..." ]
 
-        RemoteData.Failure err ->
+        ( _, RemoteData.Failure err ) ->
             h1 [] [ text <| errorMessage err ]
 
-        RemoteData.Loading ->
+        ( _, RemoteData.Loading ) ->
             h1 [] [ text "LOADING..." ]
 
-        RemoteData.Success closet ->
+        ( _, RemoteData.Success closet ) ->
             viewCloset closet model.selectedFamilyId
 
 
@@ -227,20 +227,18 @@ viewFamilyPanel familyView families =
 
 viewFamily : (Family -> String) -> Maybe String -> Family -> Html Msg
 viewFamily hrefBuilder selectedFamilyId family =
-    a [ href (hrefBuilder family) ]
-        [ div
-            [ onClick (FamilySelected family.id)
-            , classList
-                [ ( "closet-family", True )
-                , ( "selected", Just family.id == selectedFamilyId )
-                ]
+    a
+        [ href (hrefBuilder family)
+        , onClick (FamilySelected family.id)
+        , classList
+            [ ( "closet-family", True )
+            , ( "selected", Just family.id == selectedFamilyId )
             ]
-            [ div [ class "closet-item-banner" ]
-                []
-            , div [ class "closet-item-content" ]
-                [ div [ class "closet-item-name" ]
-                    [ text family.id ]
-                ]
+        ]
+        [ div [ class "closet-item-banner" ] []
+        , div [ class "closet-item-content" ]
+            [ div [ class "closet-item-name" ]
+                [ text family.id ]
             ]
         ]
 
@@ -263,17 +261,15 @@ viewItemPanel itemView family =
 
 viewItem : (Item -> String) -> Item -> Html Msg
 viewItem hrefBuilder item =
-    a [ href (hrefBuilder item) ]
-        [ div
-            [ class "closet-item"
-            , class item.state
-            ]
-            [ div [ class "closet-item-banner" ]
-                []
-            , div [ class "closet-item-content" ]
-                [ div [ class "closet-item-name" ]
-                    [ text item.id ]
-                ]
+    a
+        [ href (hrefBuilder item)
+        , class "closet-item"
+        , class item.state
+        ]
+        [ div [ class "closet-item-banner" ] []
+        , div [ class "closet-item-content" ]
+            [ div [ class "closet-item-name" ]
+                [ text item.id ]
             ]
         ]
 

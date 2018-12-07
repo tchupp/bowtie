@@ -157,8 +157,7 @@ updateRoute route model =
             case ( route, model.pageModel ) of
                 ( Router.Closet closetId familyId selections, ClosetModel closetModel ) ->
                     Page.Closet.reinit closetModel closetId familyId selections
-                        |> Tuple.mapFirst ClosetModel
-                        |> Tuple.mapSecond closetCmd
+                        |> updateWith ClosetModel ClosetMsg
 
                 _ ->
                     initPageModel () route
@@ -173,20 +172,27 @@ updatePage msg model =
             let
                 ( newModel, cmd ) =
                     Page.Dashboard.update dashboardMsg dashboardModel
-                        |> Tuple.mapFirst DashboardModel
+                        |> updateWith DashboardModel DashboardMsg
             in
-            ( { model | pageModel = newModel }, dashboardCmd cmd )
+            ( { model | pageModel = newModel }, cmd )
 
         ( ClosetMsg closetMsg, ClosetModel closetModel ) ->
             let
                 ( newModel, cmd ) =
                     Page.Closet.update closetMsg closetModel
-                        |> Tuple.mapFirst ClosetModel
+                        |> updateWith ClosetModel ClosetMsg
             in
-            ( { model | pageModel = newModel }, closetCmd cmd )
+            ( { model | pageModel = newModel }, cmd )
 
         _ ->
             ( model, Cmd.none )
+
+
+updateWith : (pageModel -> PageModel) -> (pageMsg -> PageMsg) -> ( pageModel, Cmd pageMsg ) -> ( PageModel, Cmd Msg )
+updateWith toModel toMsg tup =
+    tup
+        |> Tuple.mapFirst toModel
+        |> Tuple.mapSecond (Cmd.map toMsg >> Cmd.map PageMsg)
 
 
 
