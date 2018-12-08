@@ -304,7 +304,7 @@ retrieveClosetUrl closetId selections =
             selections
                 |> String.join ","
     in
-    Url.crossOrigin "https://us-central1-bowtie-samurai-prod.cloudfunctions.net/api"
+    Url.crossOrigin "https://ignition-app.xyz"
         [ "closets", closetId ]
         [ Url.string "selections" selectionsQuery ]
 
