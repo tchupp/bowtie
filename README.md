@@ -1,6 +1,6 @@
 # Bowtie - Web
 
-[![Build Status](https://travis-ci.org/tchupp/bowtie-web.svg?branch=master)](https://travis-ci.org/tchupp/bowtie-web)
+[![Build Status](https://travis-ci.org/tchupp/bowtie.svg?branch=master)](https://travis-ci.org/tchupp/bowtie)
 
 Bowtie is a Closet organization tool, showcasing the Ignition Platform
 
