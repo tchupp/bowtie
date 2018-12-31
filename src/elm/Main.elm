@@ -38,6 +38,7 @@ init _ url navKey =
     let
         ( routerModel, routerCmd ) =
             Router.init () url navKey
+                |> Tuple.mapSecond (Cmd.map RouterMsg)
 
         route =
             Router.parseRoute url
@@ -57,7 +58,7 @@ init _ url navKey =
 
         cmd =
             Cmd.batch
-                [ Cmd.map RouterMsg routerCmd
+                [ routerCmd
                 , topBarCmd
                 , pageCmd
                 ]

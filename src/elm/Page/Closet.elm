@@ -43,7 +43,7 @@ type alias ItemId =
 
 isSelected : Item -> Bool
 isSelected item =
-    item.state == "selected"
+    item.state == "SELECTED"
 
 
 selectedItems : List Family -> List Item
@@ -173,13 +173,13 @@ viewCloset closet selectedFamilyId =
                 apply : List ItemId -> List ItemId
                 apply items =
                     case item.state of
-                        "selected" ->
+                        "SELECTED" ->
                             List.filter (\i -> item.id /= i) items
 
-                        "available" ->
+                        "AVAILABLE" ->
                             List.append [ item.id ] items
 
-                        "required" ->
+                        "REQUIRED" ->
                             List.append [ item.id ] items
 
                         _ ->
@@ -264,7 +264,7 @@ viewItem hrefBuilder item =
     a
         [ href (hrefBuilder item)
         , class "closet-item"
-        , class item.state
+        , class (String.toLower item.state)
         ]
         [ div [ class "closet-item-banner" ] []
         , div [ class "closet-item-content" ]
@@ -305,33 +305,29 @@ retrieveClosetUrl closetId selections =
                 |> String.join ","
     in
     Url.crossOrigin "https://ignition-app.xyz"
-        [ "closets", closetId ]
+        [ "v1", "projects", "bowtie", "catalogs", closetId, "options" ]
         [ Url.string "selections" selectionsQuery ]
 
 
 closetDecoder : String -> Decoder Closet
 closetDecoder closetId =
-    Json.Decode.map (Closet closetId)
-        (field "options" familiesDecoder)
+    Json.Decode.map2 Closet
+        (field "catalogId" string)
+        (field "options" (Json.Decode.list familyDecoder))
 
 
-familiesDecoder : Decoder (List Family)
-familiesDecoder =
-    list itemDecoder
-        |> Json.Decode.map (List.sortBy .id)
-        |> dict
-        |> Json.Decode.map (Dict.map Family)
-        |> Json.Decode.map Dict.values
+familyDecoder : Decoder Family
+familyDecoder =
+    Json.Decode.map2 Family
+        (field "familyId" string)
+        (field "options" (Json.Decode.list itemDecoder))
 
 
 itemDecoder : Decoder Item
 itemDecoder =
-    oneOf
-        [ Json.Decode.map (Item "available") <| field "Available" string
-        , Json.Decode.map (Item "excluded") <| field "Excluded" string
-        , Json.Decode.map (Item "selected") <| field "Selected" string
-        , Json.Decode.map (Item "required") <| field "Required" string
-        ]
+    Json.Decode.map2 Item
+        (field "itemStatus" string)
+        (field "itemId" string)
 
 
 errorMessage : Http.Error -> String
