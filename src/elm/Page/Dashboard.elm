@@ -3,7 +3,7 @@ module Page.Dashboard exposing (Model, Msg, init, update, view)
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
 import Http
-import Json.Decode exposing (Decoder, field, int, list, map3, string)
+import Json.Decode exposing (Decoder, field, int, list, map, map3, string)
 import RemoteData exposing (WebData)
 import Router
 import TopBar
@@ -16,9 +16,9 @@ type alias Model =
 
 
 type alias Closet =
-    { id : Int
-    , name : String
-    , html_url : String
+    { id : String
+    , token : String
+    , created : String
     }
 
 
@@ -28,7 +28,7 @@ type alias Closet =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { closets = RemoteData.Loading }, fetchRepos "tchupp" )
+    ( { closets = RemoteData.Loading }, fetchClosets )
 
 
 
@@ -36,13 +36,13 @@ init =
 
 
 type Msg
-    = UserRepos (WebData (List Closet))
+    = RetrieveClosets (WebData (List Closet))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        UserRepos closets ->
+        RetrieveClosets closets ->
             ( { model | closets = closets }, Cmd.none )
 
 
@@ -78,9 +78,9 @@ viewCloset closet =
         [ div [ class "dashboard-pipeline-banner" ]
             []
         , div [ class "dashboard-pipeline-content" ]
-            [ a [ href <| "#/closet/" ++ closet.name ]
+            [ a [ href <| "#/closet/" ++ closet.id ]
                 [ div [ class "dashboard-pipeline-name" ]
-                    [ text closet.name ]
+                    [ text closet.id ]
                 ]
             ]
         ]
@@ -90,34 +90,32 @@ viewCloset closet =
 -- HTTP
 
 
-fetchRepos : String -> Cmd Msg
-fetchRepos username =
+fetchClosets : Cmd Msg
+fetchClosets =
     closetsDecoder
-        |> Http.get (listRepoUrl username)
+        |> Http.get retrieveClosetsUrl
         |> RemoteData.sendRequest
-        |> Cmd.map UserRepos
+        |> Cmd.map RetrieveClosets
 
 
-listRepoUrl : String -> String
-listRepoUrl username =
-    Url.crossOrigin "https://api.github.com"
-        [ "users", username, "repos" ]
-        [ Url.string "type" "owner"
-        , Url.string "sort" "full_name"
-        ]
+retrieveClosetsUrl : String
+retrieveClosetsUrl =
+    Url.crossOrigin "https://ignition-app.xyz"
+        [ "v1", "projects", "bowtie", "catalogs" ]
+        []
 
 
 closetDecoder : Decoder Closet
 closetDecoder =
     map3 Closet
-        (field "id" int)
-        (field "name" string)
-        (field "html_url" string)
+        (field "catalogId" string)
+        (field "token" string)
+        (field "created" string)
 
 
 closetsDecoder : Decoder (List Closet)
 closetsDecoder =
-    list closetDecoder
+    field "catalogs" (list closetDecoder)
 
 
 errorMessage : Http.Error -> String
