@@ -112,7 +112,8 @@ routeParser =
 
 queryList : String -> Query.Parser (List String)
 queryList key =
-    Query.custom key <| identity
+    Query.custom key identity
+        |> Query.map (List.filter (String.isEmpty >> not))
 
 
 
