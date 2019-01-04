@@ -136,7 +136,7 @@ closetRoute =
 
 buildClosetRoute : String -> Maybe String -> List String -> String
 buildClosetRoute id family selections =
-    Url.Builder.absolute
+    Url.Builder.relative
         [ "#/closet", id ]
         [ Url.Builder.string "family" <| Maybe.withDefault "" family
         , Url.Builder.string "selections" <| String.join "," selections
