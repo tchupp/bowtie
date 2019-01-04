@@ -24,6 +24,7 @@ type alias Model =
 type alias Closet =
     { id : String
     , families : List Family
+    , token : String
     }
 
 
@@ -76,14 +77,26 @@ init closetId selectedFamilyId selections =
 
 reinit : Model -> String -> Maybe String -> List ItemId -> ( Model, Cmd Msg )
 reinit model closetId selectedFamilyId selections =
+    let
+        closetChanged =
+            model.selections == selections && model.closetId == closetId
+
+        ( closet, prevCloset, cmd ) =
+            case closetChanged of
+                True ->
+                    ( model.closet, model.prevCloset, Cmd.none )
+
+                False ->
+                    ( RemoteData.Loading, model.closet, fetchCloset closetId selections )
+    in
     ( { model
         | closetId = closetId
-        , prevCloset = model.closet
-        , closet = RemoteData.Loading
+        , prevCloset = prevCloset
+        , closet = closet
         , selectedFamilyId = selectedFamilyId
         , selections = selections
       }
-    , fetchCloset closetId selections
+    , cmd
     )
 
 
@@ -152,6 +165,9 @@ view model =
 
         ( _, RemoteData.Failure err ) ->
             h1 [] [ text <| errorMessage err ]
+
+        ( RemoteData.Success closet, RemoteData.Loading ) ->
+            viewCloset closet model.selectedFamilyId
 
         ( _, RemoteData.Loading ) ->
             h1 [] [ text "LOADING..." ]
@@ -311,9 +327,10 @@ retrieveClosetUrl closetId selections =
 
 closetDecoder : String -> Decoder Closet
 closetDecoder closetId =
-    Json.Decode.map2 Closet
+    Json.Decode.map3 Closet
         (field "catalogId" string)
         (field "options" (Json.Decode.list familyDecoder))
+        (field "token" string)
 
 
 familyDecoder : Decoder Family
