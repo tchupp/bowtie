@@ -245,7 +245,6 @@ viewFamily : (Family -> String) -> Maybe String -> Family -> Html Msg
 viewFamily hrefBuilder selectedFamilyId family =
     a
         [ href (hrefBuilder family)
-        , onClick (FamilySelected family.id)
         , classList
             [ ( "closet-family", True )
             , ( "selected", Just family.id == selectedFamilyId )
@@ -272,7 +271,7 @@ viewItemPanel itemView family =
     in
     div [ class "closet-items-panel" ] <|
         div [ class "closet-panel-name" ] [ text "Items" ]
-            :: List.map itemView items
+            :: List.map itemView (List.sortBy .id items)
 
 
 viewItem : (Item -> String) -> Item -> Html Msg
