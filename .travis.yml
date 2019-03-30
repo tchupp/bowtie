@@ -10,7 +10,7 @@ notifications:
     on_success: never
 
 script:
-  - yarn run build
+  - yarn run prod:compress
 
 deploy:
   provider: pages
