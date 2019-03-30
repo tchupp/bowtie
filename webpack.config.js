@@ -16,22 +16,17 @@ module.exports = ({mode, presets} = {mode: "production", presets: []}) => {
             module: {
                 rules: [
                     {
-                        test: /\.html$/,
-                        exclude: /node_modules/,
-                        loader: 'file-loader?name=[name].[ext]'
-                    },
-                    {
                         test: /\.(eot|svg|ttf|woff|woff2)$/,
                         loader: 'file-loader'
                     }
                 ]
             },
             plugins: [
-                // new HtmlWebpackPlugin({
-                //     template: 'src/static/index.html',
-                //     inject: 'body',
-                //     filename: 'index.html',
-                // }),
+                new HtmlWebpackPlugin({
+                    template: 'src/static/index.html',
+                    inject: 'body',
+                    filename: 'index.html',
+                }),
 
                 new StyleLintPlugin(),
 
