@@ -13,3 +13,6 @@ node_modules
 out
 gen
 dist
+
+## OSX
+.DS_Store
