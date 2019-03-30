@@ -17,7 +17,7 @@ module.exports = ({mode, presets} = {mode: "production", presets: []}) => {
                 rules: [
                     {
                         test: /\.(eot|svg|ttf|woff|woff2)$/,
-                        loader: 'file-loader'
+                        loader: 'file-loader?name=[name].[hash].[ext]'
                     }
                 ]
             },

@@ -63,7 +63,7 @@ module.exports = () => ({
 
     plugins: [
         new MiniCssExtractPlugin({
-            filename: 'static/css/[name].[hash].css',
+            filename: '[name].[hash].css',
         }),
 
         new PurgecssPlugin({
