@@ -7,10 +7,10 @@
   "scripts": {
     "webpack": "webpack",
     "webpack-dev-server": "webpack-dev-server",
-    "prod": "yarn run webpack -- --env.mode production",
-    "prod:analyze": "yarn run prod -- --env.presets analyze",
-    "prod:compress": "yarn run prod -- --env.presets compress",
-    "dev": "webpack-dashboard --title 'Elm Dev Server' -- yarn run webpack-dev-server -- --env.mode development",
+    "prod": "yarn run webpack --env.mode production",
+    "prod:analyze": "yarn run prod --env.presets analyze",
+    "prod:compress": "yarn run prod --env.presets compress",
+    "dev": "webpack-dashboard --title 'Elm Dev Server' -- yarn run webpack-dev-server --env.mode development",
     "elm-analyse": "elm-analyse -s -o",
     "clean": "rimraf dist"
   },
@@ -38,7 +38,6 @@
     "stylelint": "^8.4.0",
     "stylelint-config-standard": "^18.2.0",
     "stylelint-webpack-plugin": "^0.10.5",
-    "svg-inline-loader": "^0.8.0",
     "terser-webpack-plugin": "^1.2.3",
     "webpack": "^4.23.1",
     "webpack-bundle-analyzer": "^3.1.0",
