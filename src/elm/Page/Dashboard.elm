@@ -3,10 +3,8 @@ module Page.Dashboard exposing (Model, Msg, init, update, view)
 import Html exposing (Html, a, div, text)
 import Html.Attributes exposing (class, href)
 import Http
-import Json.Decode exposing (Decoder, field, int, list, map, map3, string)
+import Json.Decode exposing (Decoder, field, list, map2, string)
 import RemoteData exposing (WebData)
-import Router
-import TopBar
 import Url.Builder as Url
 
 
@@ -17,7 +15,6 @@ type alias Model =
 
 type alias Closet =
     { id : String
-    , token : String
     , created : String
     }
 
@@ -107,9 +104,8 @@ retrieveClosetsUrl =
 
 closetDecoder : Decoder Closet
 closetDecoder =
-    map3 Closet
+    map2 Closet
         (field "catalogId" string)
-        (field "token" string)
         (field "created" string)
 
 

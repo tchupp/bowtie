@@ -11,7 +11,6 @@ import Page.NotFound
 import Router
 import TopBar
 import Url exposing (Url)
-import Url.Parser as UrlParser exposing ((</>), Parser, fragment, s, string, top)
 
 
 type alias Model =

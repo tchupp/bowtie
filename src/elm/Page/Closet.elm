@@ -1,14 +1,11 @@
 module Page.Closet exposing (Model, Msg, init, reinit, update, view)
 
-import Dict exposing (Dict)
 import Html exposing (Html, a, div, h1, text)
 import Html.Attributes exposing (class, classList, href)
-import Html.Events exposing (onClick)
 import Http
-import Json.Decode exposing (Decoder, dict, field, list, oneOf, string)
+import Json.Decode exposing (Decoder, field, string)
 import RemoteData exposing (WebData)
 import Router exposing (buildClosetRoute)
-import TopBar
 import Url.Builder as Url
 
 
@@ -50,8 +47,7 @@ isSelected item =
 selectedItems : List Family -> List Item
 selectedItems families =
     families
-        |> List.map .items
-        |> List.concat
+        |> List.concatMap .items
         |> List.filter isSelected
 
 
