@@ -97,7 +97,7 @@ fetchClosets =
 
 retrieveClosetsUrl : String
 retrieveClosetsUrl =
-    Url.crossOrigin "https://ignition-app.xyz"
+    Url.crossOrigin "https://catalogs.ignition-app.xyz"
         [ "v1", "projects", "examples", "catalogs" ]
         []
 
