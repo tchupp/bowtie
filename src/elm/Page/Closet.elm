@@ -21,7 +21,7 @@ type alias Model =
 type alias Closet =
     { id : String
     , families : List Family
-    , token : String
+    , state : String
     }
 
 
@@ -322,10 +322,9 @@ retrieveClosetUrl closetId selections =
 
 closetDecoder : String -> Decoder Closet
 closetDecoder closetId =
-    Json.Decode.map3 Closet
-        (field "catalogId" string)
+    Json.Decode.map2 (Closet closetId)
         (field "options" (Json.Decode.list familyDecoder))
-        (field "token" string)
+        (field "state" string)
 
 
 familyDecoder : Decoder Family
